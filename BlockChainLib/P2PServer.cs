@@ -1,49 +1,51 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text.Json;
+using WebSocketSharp;
+using WebSocketSharp.Server;
 
-namespace BlockChainLib
+namespace BlockChainLib;
+
+public class P2PServer : WebSocketBehavior
 {
-    public class P2PServer : WebSocketBehavior
+    bool chainSynced;
+    WebSocketServer wss;
+    private static Blockchain _blockchain;
+
+    public void Start(int port, Blockchain blockchain)
     {
-        bool chainSynched = false;
-        WebSocketServer wss = null;
+        _blockchain = blockchain;
+        wss = new WebSocketServer($"ws://127.0.0.1:{port}");
+        wss.AddWebSocketService<P2PServer>("/Blockchain");
+        wss.Start();
+        Console.WriteLine($"Started server at ws://127.0.0.1:{port}");
+    }
 
-        public void Start()
+    protected override void OnMessage(MessageEventArgs e)
+    {
+        if (e.Data == "Hi Server")
         {
-            wss = new WebSocketServer($"ws://127.0.0.1:{Program.Port}");
-            wss.AddWebSocketService<P2PServer>("/Blockchain");
-            wss.Start();
-            Console.WriteLine($"Started server at ws://127.0.0.1:{Program.Port}");
+            Console.WriteLine(e.Data);
+            Send("Hi Client");
         }
-
-        protected override void OnMessage(MessageEventArgs e)
+        else
         {
-            if (e.Data == "Hi Server")
+            Blockchain newChain = JsonSerializer.Deserialize<Blockchain>(e.Data);
+
+            if (newChain is not null && newChain.IsValid() && newChain.Chain.Count > _blockchain.Chain.Count)
             {
-                Console.WriteLine(e.Data);
-                Send("Hi Client");
+                List<Transaction> newTransactions = new List<Transaction>();
+                newTransactions.AddRange(newChain.PendingTransactions);
+                newTransactions.AddRange(_blockchain.PendingTransactions);
+
+                _blockchain = new Blockchain();
+                _blockchain.CreateTransactions(newTransactions);
             }
-            else
+
+            if (!chainSynced)
             {
-                Blockchain newChain = JsonConvert.DeserializeObject<Blockchain>(e.Data);
-
-                if (newChain.IsValid() && newChain.Chain.Count > Program.PhillyCoin.Chain.Count)
-                {
-                    List<Transaction> newTransactions = new List<Transaction>();
-                    newTransactions.AddRange(newChain.PendingTransactions);
-                    newTransactions.AddRange(Program.PhillyCoin.PendingTransactions);
-
-                    newChain.PendingTransactions = newTransactions;
-                    Program.PhillyCoin = newChain;
-                }
-
-                if (!chainSynched)
-                {
-                    Send(JsonConvert.SerializeObject(Program.PhillyCoin));
-                    chainSynched = true;
-                }
+                Send(JsonSerializer.Serialize(_blockchain, new JsonSerializerOptions { WriteIndented = true }));
+                chainSynced = true;
             }
         }
+        Console.WriteLine(JsonSerializer.Serialize(_blockchain));
     }
 }
