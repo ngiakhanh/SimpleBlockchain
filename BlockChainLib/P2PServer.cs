@@ -32,12 +32,7 @@ public class P2PServer : WebSocketBehavior
 
             if (newChain is not null && newChain.IsValid() && newChain.Chain.Count > _blockchain.Chain.Count)
             {
-                List<Transaction> newTransactions = new List<Transaction>();
-                newTransactions.AddRange(newChain.PendingTransactions);
-                newTransactions.AddRange(_blockchain.PendingTransactions);
-
-                _blockchain = new Blockchain();
-                _blockchain.CreateTransactions(newTransactions);
+                _blockchain = newChain;
             }
 
             if (!chainSynced)
@@ -46,6 +41,6 @@ public class P2PServer : WebSocketBehavior
                 chainSynced = true;
             }
         }
-        Console.WriteLine(JsonSerializer.Serialize(_blockchain));
+        Console.WriteLine(JsonSerializer.Serialize(_blockchain, new JsonSerializerOptions { WriteIndented = true }));
     }
 }

@@ -29,12 +29,7 @@ public class P2PClient
                     Blockchain newChain = JsonSerializer.Deserialize<Blockchain>(e.Data);
                     if (newChain is not null && newChain.IsValid() && newChain.Chain.Count > _blockchain.Chain.Count)
                     {
-                        List<Transaction> newTransactions = new List<Transaction>();
-                        newTransactions.AddRange(newChain.PendingTransactions);
-                        newTransactions.AddRange(_blockchain.PendingTransactions);
-
-                        _blockchain = new Blockchain();
-                        _blockchain.CreateTransactions(newTransactions);
+                        _blockchain = newChain;
                     }
                 }
                 Console.WriteLine(JsonSerializer.Serialize(_blockchain, new JsonSerializerOptions { WriteIndented = true }));

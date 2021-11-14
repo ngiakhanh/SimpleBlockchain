@@ -2,11 +2,11 @@
 
 public class Blockchain
 {
-    public List<Block> Chain { get; private set; }
+    public List<Block> Chain { get; set; }
 
     public int Difficulty { get; } = 1;
 
-    public List<Transaction> PendingTransactions { get; private set; }
+    public List<Transaction> PendingTransactions { get; set; }
 
     public int Reward { get; private set; } = 10;
 

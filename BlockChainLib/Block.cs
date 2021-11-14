@@ -13,7 +13,7 @@ public class Block
     public int Nonce { get; set; }
     public IList<Transaction> Transactions { get; set; }
 
-    public Block(DateTime timeStamp, string previousHash, IEnumerable<Transaction> transactions)
+    public Block(DateTime timeStamp, string previousHash, IList<Transaction> transactions)
     {
         Index = 0;
         TimeStamp = timeStamp;
